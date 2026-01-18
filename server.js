@@ -8,7 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const uri = process.env.MONGODB_URI;
 
-if (!uri) {
+if (!uri) {s
     console.error("FATAL ERROR: MONGODB_URI is not defined. Please create a .env file with your MongoDB connection string.");
     process.exit(1);
 }
