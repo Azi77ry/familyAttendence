@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Attendance System</title>
+    <meta name="description" content="Track family members' daily attendance with location verification">
+    
+    <!-- React and Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+      const { useState, useEffect } = React;
+
+// Icon components (inline SVG icons)
+const Calendar = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+    <line x1="16" y1="2" x2="16" y2="6"></line>
+    <line x1="8" y1="2" x2="8" y2="6"></line>
+    <line x1="3" y1="10" x2="21" y2="10"></line>
+  </svg>
+);
+
+const MapPin = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+    <circle cx="12" cy="10" r="3"></circle>
+  </svg>
+);
+
+const CheckCircle = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+  </svg>
+);
+
+const XCircle = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="15" y1="9" x2="9" y2="15"></line>
+    <line x1="9" y1="9" x2="15" y2="15"></line>
+  </svg>
+);
+
+const Clock = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10"></circle>
+    <polyline points="12 6 12 12 16 14"></polyline>
+  </svg>
+);
+
+const User = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+    <circle cx="12" cy="7" r="4"></circle>
+  </svg>
+);
+
+const LogOut = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+    <polyline points="16 17 21 12 16 7"></polyline>
+    <line x1="21" y1="12" x2="9" y2="12"></line>
+  </svg>
+);
+
+const AlertCircle = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="12" y1="8" x2="12" y2="12"></line>
+    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+  </svg>
+);
+
+const Camera = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+    <circle cx="12" cy="13" r="4"></circle>
+  </svg>
+);
+
+const Edit2 = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+  </svg>
+);
+
+const Home = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+  </svg>
+);
+
+const TrendingUp = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+    <polyline points="17 6 23 6 23 12"></polyline>
+  </svg>
+);
+
+const Award = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+    <circle cx="12" cy="8" r="7"></circle>
+    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+  </svg>
+);
+
+const FamilyAttendance = () => {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [showRegister, setShowRegister] = useState(false);
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+  const [registerForm, setRegisterForm] = useState({ username: '', password: '', name: '', profilePic: '' });
+  const [users, setUsers] = useState([]);
+  const [attendanceRecords, setAttendanceRecords] = useState({});
+  const [locationStatus, setLocationStatus] = useState(null);
+  const [checkingLocation, setCheckingLocation] = useState(false);
+  const [isDemo, setIsDemo] = useState(true);
+  const [editProfile, setEditProfile] = useState(false);
+  const [showAllRecords, setShowAllRecords] = useState(false);
+  const [viewingMember, setViewingMember] = useState(null);
+
+  const HOME_LAT = -6.76752;
+  const HOME_LNG = 39.20620;
+  const MAX_DISTANCE = 100;
+
+  // Load users and attendance from localStorage (persistent storage)
+  useEffect(() => {
+    const storedUsers = localStorage.getItem('family_users');
+    if (storedUsers) {
+      setUsers(JSON.parse(storedUsers));
+    }
+
+    const stored = {};
+    const allUsers = storedUsers ? JSON.parse(storedUsers) : [];
+    allUsers.forEach(user => {
+      const key = `attendance_${user.id}`;
+      const data = localStorage.getItem(key);
+      stored[user.id] = data ? JSON.parse(data) : [];
+    });
+    setAttendanceRecords(stored);
+  }, []);
+
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371e3;
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c;
+  };
+
+  const checkLocation = () => {
+    return new Promise((resolve) => {
+      setCheckingLocation(true);
+      
+      if (!navigator.geolocation) {
+        setTimeout(() => {
+          const randomDistance = Math.random() * 100;
+          setCheckingLocation(false);
+          resolve({ distance: randomDistance, withinRange: randomDistance <= MAX_DISTANCE });
+        }, 1000);
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const distance = calculateDistance(
+            HOME_LAT, HOME_LNG,
+            position.coords.latitude,
+            position.coords.longitude
+          );
+          setCheckingLocation(false);
+          setIsDemo(false);
+          resolve({ distance, withinRange: distance <= MAX_DISTANCE });
+        },
+        () => {
+          setTimeout(() => {
+            const randomDistance = Math.random() * 100;
+            setCheckingLocation(false);
+            resolve({ distance: randomDistance, withinRange: randomDistance <= MAX_DISTANCE });
+          }, 1000);
+        }
+      );
+    });
+  };
+
+  const handleImageUpload = (e, isEdit = false) => {
+    const file = e.target.files[0];
+    if (file && file.size < 2000000) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (isEdit) {
+          setRegisterForm({ ...registerForm, profilePic: reader.result });
+        } else {
+          setRegisterForm({ ...registerForm, profilePic: reader.result });
+        }
+      };
+      reader.readAsDataURL(file);
+    } else {
+      alert('Image size should be less than 2MB');
+    }
+  };
+
+  const handleRegister = () => {
+    if (!registerForm.username || !registerForm.password || !registerForm.name) {
+      alert('Please fill all fields');
+      return;
+    }
+
+    if (users.some(u => u.username === registerForm.username)) {
+      alert('Username already exists');
+      return;
+    }
+
+    const newUser = {
+      id: Date.now(),
+      username: registerForm.username,
+      password: registerForm.password,
+      name: registerForm.name,
+      profilePic: registerForm.profilePic || null,
+      registeredAt: new Date().toISOString()
+    };
+
+    const updatedUsers = [...users, newUser];
+    setUsers(updatedUsers);
+    localStorage.setItem('family_users', JSON.stringify(updatedUsers));
+    setAttendanceRecords({ ...attendanceRecords, [newUser.id]: [] });
+    
+    setRegisterForm({ username: '', password: '', name: '', profilePic: '' });
+    setShowRegister(false);
+    alert('Registration successful! You can now login.');
+  };
+
+  const handleLogin = () => {
+    const user = users.find(
+      u => u.username === loginForm.username && u.password === loginForm.password
+    );
+    
+    if (user) {
+      setCurrentUser(user);
+      setLoginForm({ username: '', password: '' });
+    } else {
+      alert('Invalid username or password');
+    }
+  };
+
+  const handleUpdateProfile = () => {
+    const updatedUsers = users.map(u => 
+      u.id === currentUser.id 
+        ? { ...u, name: registerForm.name, profilePic: registerForm.profilePic }
+        : u
+    );
+    
+    setUsers(updatedUsers);
+    localStorage.setItem('family_users', JSON.stringify(updatedUsers));
+    setCurrentUser({ ...currentUser, name: registerForm.name, profilePic: registerForm.profilePic });
+    setEditProfile(false);
+    setRegisterForm({ username: '', password: '', name: '', profilePic: '' });
+  };
+
+  const handleSignIn = async (session) => {
+    try {
+      const location = await checkLocation();
+      
+      if (!location.withinRange) {
+        setLocationStatus({
+          success: false,
+          message: `You are ${Math.round(location.distance)}m away from home. You must be within ${MAX_DISTANCE}m to sign in.`
+        });
+        return;
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString();
+
+      const newRecord = {
+        date: today,
+        session,
+        time: timeStr,
+        distance: Math.round(location.distance)
+      };
+
+      const updatedRecords = [...(attendanceRecords[currentUser.id] || []), newRecord];
+      
+      setAttendanceRecords(prev => ({
+        ...prev,
+        [currentUser.id]: updatedRecords
+      }));
+
+      localStorage.setItem(`attendance_${currentUser.id}`, JSON.stringify(updatedRecords));
+
+      setLocationStatus({
+        success: true,
+        message: `Successfully signed in for ${session} session! Distance: ${Math.round(location.distance)}m`
+      });
+
+    } catch (error) {
+      setLocationStatus({
+        success: false,
+        message: `Location error: ${error}`
+      });
+    }
+  };
+
+  const hasSignedInToday = (session) => {
+    const today = new Date().toISOString().split('T')[0];
+    const userRecords = attendanceRecords[currentUser?.id] || [];
+    return userRecords.some(r => r.date === today && r.session === session);
+  };
+
+  const getUserRecords = (userId = null) => {
+    const id = userId || currentUser?.id;
+    return (attendanceRecords[id] || []).reverse();
+  };
+
+  const getAttendanceStats = (userId = null) => {
+    const id = userId || currentUser?.id;
+    const records = attendanceRecords[id] || [];
+    const uniqueDates = new Set(records.map(r => r.date));
+    const morningCount = records.filter(r => r.session === 'Morning').length;
+    const nightCount = records.filter(r => r.session === 'Night').length;
+    
+    return {
+      totalDays: uniqueDates.size,
+      morningTotal: morningCount,
+      nightTotal: nightCount,
+      streak: calculateStreak(records)
+    };
+  };
+
+  const calculateStreak = (records) => {
+    if (records.length === 0) return 0;
+    
+    const dates = [...new Set(records.map(r => r.date))].sort().reverse();
+    let streak = 0;
+    const today = new Date();
+    
+    for (let i = 0; i < dates.length; i++) {
+      const recordDate = new Date(dates[i]);
+      const expectedDate = new Date(today);
+      expectedDate.setDate(today.getDate() - i);
+      
+      if (recordDate.toDateString() === expectedDate.toDateString()) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    
+    return streak;
+  };
+
+  const getAllMembersRecords = () => {
+    const allRecords = [];
+    const today = new Date();
+    const last30Days = [];
+    
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      last30Days.push(date.toISOString().split('T')[0]);
+    }
+
+    users.forEach(user => {
+      const userRecords = attendanceRecords[user.id] || [];
+      const recordsByDate = {};
+      
+      userRecords.forEach(record => {
+        if (!recordsByDate[record.date]) {
+          recordsByDate[record.date] = { morning: false, night: false };
+        }
+        if (record.session === 'Morning') recordsByDate[record.date].morning = true;
+        if (record.session === 'Night') recordsByDate[record.date].night = true;
+      });
+
+      allRecords.push({
+        user,
+        recordsByDate,
+        totalDays: Object.keys(recordsByDate).length,
+        morningCount: userRecords.filter(r => r.session === 'Morning').length,
+        nightCount: userRecords.filter(r => r.session === 'Night').length
+      });
+    });
+
+    return { allRecords, last30Days };
+  };
+
+  // Login/Register Screen
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black opacity-20"></div>
+        <div className="relative bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 w-full max-w-md border border-white/20">
+          {!showRegister ? (
+            <>
+              <div className="text-center mb-8">
+                <div className="bg-gradient-to-br from-indigo-500 to-purple-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <Home className="w-10 h-10 text-white" />
+                </div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                  Family Attendance
+                </h1>
+                <p className="text-gray-600 mt-2">Welcome back! Sign in to continue</p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    value={loginForm.username}
+                    onChange={(e) => setLoginForm({...loginForm, username: e.target.value})}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    placeholder="Enter your username"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    value={loginForm.password}
+                    onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
+                    onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    placeholder="Enter your password"
+                  />
+                </div>
+
+                <button
+                  onClick={handleLogin}
+                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  Login
+                </button>
+
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">New member?</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowRegister(true)}
+                  className="w-full border-2 border-indigo-600 text-indigo-600 py-3 rounded-xl hover:bg-indigo-50 transition-all font-semibold"
+                >
+                  Create Account
+                </button>
+              </div>
+
+              {users.length > 0 && (
+                <div className="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-100">
+                  <p className="text-xs text-indigo-800 font-semibold mb-2">
+                    Registered Members: {users.length}
+                  </p>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="text-center mb-8">
+                <div className="bg-gradient-to-br from-purple-500 to-pink-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <User className="w-10 h-10 text-white" />
+                </div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  Join Family
+                </h1>
+                <p className="text-gray-600 mt-2">Create your account</p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex justify-center mb-4">
+                  <div className="relative">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
+                      {registerForm.profilePic ? (
+                        <img src={registerForm.profilePic} alt="Profile" className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-12 h-12 text-gray-400" />
+                      )}
+                    </div>
+                    <label className="absolute bottom-0 right-0 bg-indigo-600 p-2 rounded-full cursor-pointer shadow-lg hover:bg-indigo-700 transition-all">
+                      <Camera className="w-4 h-4 text-white" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    value={registerForm.name}
+                    onChange={(e) => setRegisterForm({...registerForm, name: e.target.value})}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                    placeholder="Enter your full name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    value={registerForm.username}
+                    onChange={(e) => setRegisterForm({...registerForm, username: e.target.value})}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                    placeholder="Choose a username"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    value={registerForm.password}
+                    onChange={(e) => setRegisterForm({...registerForm, password: e.target.value})}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                    placeholder="Create a password"
+                  />
+                </div>
+
+                <button
+                  onClick={handleRegister}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  Register
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowRegister(false);
+                    setRegisterForm({ username: '', password: '', name: '', profilePic: '' });
+                  }}
+                  className="w-full border-2 border-gray-300 text-gray-700 py-3 rounded-xl hover:bg-gray-50 transition-all font-semibold"
+                >
+                  Back to Login
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Main Dashboard
+  const stats = getAttendanceStats();
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="max-w-6xl mx-auto p-4 md:p-6">
+        {isDemo && (
+          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-2xl p-4 mb-6 flex items-start gap-3 shadow-lg">
+            <AlertCircle className="w-6 h-6 text-yellow-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <h3 className="font-bold text-yellow-900">Demo Mode Active</h3>
+              <p className="text-sm text-yellow-800 mt-1">
+                Location is simulated. Deploy on your own server for real GPS verification within 50m of home.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Profile Header */}
+        <div className="bg-white rounded-3xl shadow-xl p-6 mb-6 border border-gray-100">
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
+                {currentUser.profilePic ? (
+                  <img src={currentUser.profilePic} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-12 h-12 text-white" />
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  setEditProfile(true);
+                  setRegisterForm({ 
+                    username: currentUser.username,
+                    password: currentUser.password,
+                    name: currentUser.name, 
+                    profilePic: currentUser.profilePic || '' 
+                  });
+                }}
+                className="absolute bottom-0 right-0 bg-white p-2 rounded-full shadow-lg border-2 border-indigo-200 hover:border-indigo-400 transition-all"
+              >
+                <Edit2 className="w-3 h-3 text-indigo-600" />
+              </button>
+            </div>
+            
+            <div className="flex-1 text-center md:text-left">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                {currentUser.name}
+              </h1>
+              <p className="text-gray-600 mt-1">@{currentUser.username}</p>
+            </div>
+
+            <button
+              onClick={() => {
+                setCurrentUser(null);
+                setLocationStatus(null);
+                setEditProfile(false);
+              }}
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 rounded-xl transition-all font-semibold shadow-md"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </button>
+
+            <button
+              onClick={() => setShowAllRecords(!showAllRecords)}
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl transition-all font-semibold shadow-lg"
+            >
+              <TrendingUp className="w-4 h-4" />
+              {showAllRecords ? 'My Dashboard' : 'All Members'}
+            </button>
+          </div>
+        </div>
+
+        {/* Edit Profile Modal */}
+        {editProfile && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md">
+              <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                Edit Profile
+              </h2>
+              
+              <div className="space-y-4">
+                <div className="flex justify-center mb-4">
+                  <div className="relative">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
+                      {registerForm.profilePic ? (
+                        <img src={registerForm.profilePic} alt="Profile" className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-12 h-12 text-gray-400" />
+                      )}
+                    </div>
+                    <label className="absolute bottom-0 right-0 bg-indigo-600 p-2 rounded-full cursor-pointer shadow-lg hover:bg-indigo-700 transition-all">
+                      <Camera className="w-4 h-4 text-white" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, true)}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
+                  <input
+                    type="text"
+                    value={registerForm.name}
+                    onChange={(e) => setRegisterForm({...registerForm, name: e.target.value})}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleUpdateProfile}
+                    className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all font-semibold shadow-lg"
+                  >
+                    Save Changes
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditProfile(false);
+                      setRegisterForm({ username: '', password: '', name: '', profilePic: '' });
+                    }}
+                    className="flex-1 border-2 border-gray-300 text-gray-700 py-3 rounded-xl hover:bg-gray-50 transition-all font-semibold"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* All Members Records View */}
+        {showAllRecords ? (
+          <>
+            {viewingMember ? (
+              // Individual Member Detail View
+              <div className="bg-white rounded-3xl shadow-xl p-6 border border-gray-100">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => setViewingMember(null)}
+                      className="p-2 hover:bg-gray-100 rounded-xl transition-all"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
+                        {viewingMember.profilePic ? (
+                          <img src={viewingMember.profilePic} alt={viewingMember.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <User className="w-8 h-8 text-white" />
+                        )}
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                          {viewingMember.name}'s Records
+                        </h2>
+                        <p className="text-gray-600">@{viewingMember.username}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Member Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  {(() => {
+                    const memberStats = getAttendanceStats(viewingMember.id);
+                    return (
+                      <>
+                        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-xl">
+                          <Calendar className="w-8 h-8 opacity-80 mb-2" />
+                          <p className="text-3xl font-bold">{memberStats.totalDays}</p>
+                          <p className="text-sm opacity-90">Total Days</p>
+                        </div>
+                        <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl p-4 text-white shadow-xl">
+                          <div className="text-2xl mb-2">🌅</div>
+                          <p className="text-3xl font-bold">{memberStats.morningTotal}</p>
+                          <p className="text-sm opacity-90">Morning</p>
+                        </div>
+                        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-4 text-white shadow-xl">
+                          <div className="text-2xl mb-2">🌙</div>
+                          <p className="text-3xl font-bold">{memberStats.nightTotal}</p>
+                          <p className="text-sm opacity-90">Night</p>
+                        </div>
+                        <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-4 text-white shadow-xl">
+                          <Award className="w-8 h-8 opacity-80 mb-2" />
+                          <p className="text-3xl font-bold">{memberStats.streak}</p>
+                          <p className="text-sm opacity-90">Day Streak</p>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+
+                {/* Member's Attendance History */}
+                <h3 className="text-xl font-bold text-gray-800 mb-4">Complete Attendance History</h3>
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {getUserRecords(viewingMember.id).length === 0 ? (
+                    <div className="text-center py-16">
+                      <div className="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Calendar className="w-10 h-10 text-gray-400" />
+                      </div>
+                      <p className="text-gray-500 font-medium">No attendance records yet</p>
+                    </div>
+                  ) : (
+                    getUserRecords(viewingMember.id).map((record, idx) => (
+                      <div key={idx} className="group bg-gradient-to-r from-gray-50 to-white border-2 border-gray-200 hover:border-indigo-300 rounded-2xl p-5 hover:shadow-lg transition-all">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="flex items-center gap-4">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                              record.session === 'Morning' 
+                                ? 'bg-gradient-to-br from-yellow-400 to-orange-500' 
+                                : 'bg-gradient-to-br from-indigo-500 to-purple-600'
+                            } shadow-lg`}>
+                              <span className="text-2xl">{record.session === 'Morning' ? '🌅' : '🌙'}</span>
+                            </div>
+                            <div>
+                              <div className="font-bold text-gray-800 text-lg">{record.date}</div>
+                              <div className="text-sm text-gray-600 font-medium">{record.session} Session • {record.time}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-2 rounded-xl border border-blue-200">
+                            <MapPin className="w-5 h-5 text-indigo-600" />
+                            <span className="font-semibold text-indigo-700">{record.distance}m</span>
+                            <span className="text-xs text-indigo-600">from home</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            ) : (
+              // All Members Table View
+              <div className="bg-white rounded-3xl shadow-xl p-6 border border-gray-100">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                <div className="bg-gradient-to-br from-purple-500 to-pink-600 p-2 rounded-xl">
+                  <TrendingUp className="w-6 h-6 text-white" />
+                </div>
+                All Family Members Attendance
+              </h2>
+            </div>
+
+            {users.length === 0 ? (
+              <div className="text-center py-16">
+                <p className="text-gray-500 font-medium">No members registered yet</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b-2 border-gray-200">
+                      <th className="text-left py-4 px-4 font-bold text-gray-700">Member</th>
+                      <th className="text-center py-4 px-4 font-bold text-gray-700">Profile</th>
+                      <th className="text-center py-4 px-4 font-bold text-gray-700">Total Days</th>
+                      <th className="text-center py-4 px-4 font-bold text-gray-700">Morning ✓</th>
+                      <th className="text-center py-4 px-4 font-bold text-gray-700">Night ✓</th>
+                      <th className="text-left py-4 px-4 font-bold text-gray-700">Last 7 Days</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getAllMembersRecords().allRecords.map((memberData, idx) => {
+                      const last7Days = getAllMembersRecords().last30Days.slice(-7);
+                      return (
+                        <tr 
+                          key={idx} 
+                          className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition-all cursor-pointer"
+                          onClick={() => setViewingMember(memberData.user)}
+                        >
+                          <td className="py-4 px-4">
+                            <div className="font-semibold text-gray-800">{memberData.user.name}</div>
+                            <div className="text-sm text-gray-500">@{memberData.user.username}</div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="flex justify-center">
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center overflow-hidden border-2 border-white shadow-md">
+                                {memberData.user.profilePic ? (
+                                  <img src={memberData.user.profilePic} alt={memberData.user.name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <User className="w-6 h-6 text-white" />
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4 text-center">
+                            <div className="inline-block bg-gradient-to-r from-blue-100 to-indigo-100 px-3 py-1 rounded-full">
+                              <span className="font-bold text-indigo-700">{memberData.totalDays}</span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4 text-center">
+                            <div className="inline-block bg-gradient-to-r from-yellow-100 to-orange-100 px-3 py-1 rounded-full">
+                              <span className="font-bold text-orange-700">{memberData.morningCount}</span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4 text-center">
+                            <div className="inline-block bg-gradient-to-r from-purple-100 to-pink-100 px-3 py-1 rounded-full">
+                              <span className="font-bold text-purple-700">{memberData.nightCount}</span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="flex gap-1">
+                              {last7Days.map((date, dateIdx) => {
+                                const dayRecord = memberData.recordsByDate[date];
+                                const hasMorning = dayRecord?.morning;
+                                const hasNight = dayRecord?.night;
+                                const bothComplete = hasMorning && hasNight;
+                                
+                                return (
+                                  <div
+                                    key={dateIdx}
+                                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all ${
+                                      bothComplete
+                                        ? 'bg-gradient-to-br from-green-400 to-emerald-500 text-white shadow-md'
+                                        : hasMorning || hasNight
+                                        ? 'bg-gradient-to-br from-yellow-300 to-orange-400 text-white shadow-sm'
+                                        : 'bg-gray-100 text-gray-400'
+                                    }`}
+                                    title={`${date}\nMorning: ${hasMorning ? '✓' : '✗'}\nNight: ${hasNight ? '✓' : '✗'}`}
+                                  >
+                                    {bothComplete ? '✓✓' : hasMorning ? '🌅' : hasNight ? '🌙' : '—'}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <div className="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
+              <div className="flex items-center gap-4 flex-wrap justify-between">
+                <div className="flex items-center gap-4 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded bg-gradient-to-br from-green-400 to-emerald-500"></div>
+                    <span className="text-sm font-medium text-gray-700">Both Sessions Complete</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded bg-gradient-to-br from-yellow-300 to-orange-400"></div>
+                    <span className="text-sm font-medium text-gray-700">One Session Complete</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded bg-gray-100"></div>
+                    <span className="text-sm font-medium text-gray-700">No Attendance</span>
+                  </div>
+                </div>
+                {!viewingMember && (
+                  <div className="text-sm font-medium text-indigo-700">
+                    💡 Click on any member to view their complete records
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+            )}
+          </>
+        ) : (
+          <>
+            {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-xl">
+            <div className="flex items-center justify-between mb-2">
+              <Calendar className="w-8 h-8 opacity-80" />
+            </div>
+            <p className="text-3xl font-bold">{stats.totalDays}</p>
+            <p className="text-sm opacity-90">Total Days</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl p-4 text-white shadow-xl">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-2xl">🌅</div>
+            </div>
+            <p className="text-3xl font-bold">{stats.morningTotal}</p>
+            <p className="text-sm opacity-90">Morning</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-4 text-white shadow-xl">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-2xl">🌙</div>
+            </div>
+            <p className="text-3xl font-bold">{stats.nightTotal}</p>
+            <p className="text-sm opacity-90">Night</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-4 text-white shadow-xl">
+            <div className="flex items-center justify-between mb-2">
+              <Award className="w-8 h-8 opacity-80" />
+            </div>
+            <p className="text-3xl font-bold">{stats.streak}</p>
+            <p className="text-sm opacity-90">Day Streak</p>
+          </div>
+        </div>
+
+        {/* Check-in Section */}
+        <div className="bg-white rounded-3xl shadow-xl p-6 mb-6 border border-gray-100">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-xl">
+              <Clock className="w-6 h-6 text-white" />
+            </div>
+            Daily Check-in
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <button
+              onClick={() => handleSignIn('Morning')}
+              disabled={hasSignedInToday('Morning') || checkingLocation}
+              className={`group relative overflow-hidden p-6 rounded-2xl border-2 transition-all transform hover:scale-105 ${
+                hasSignedInToday('Morning')
+                  ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300 cursor-not-allowed'
+                  : 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-300 hover:border-yellow-400 hover:shadow-xl'
+              }`}
+            >
+              <div className="relative z-10">
+                <div className="text-6xl mb-3 transform group-hover:scale-110 transition-transform">🌅</div>
+                <div className="text-xl font-bold text-gray-800">Morning Session</div>
+                <p className="text-sm text-gray-600 mt-1">Start your day right</p>
+                {hasSignedInToday('Morning') && (
+                  <div className="mt-4 flex items-center justify-center gap-2 text-green-600 font-semibold">
+                    <CheckCircle className="w-5 h-5" />
+                    Completed Today
+                  </div>
+                )}
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-100 to-orange-100 opacity-0 group-hover:opacity-50 transition-opacity"></div>
+            </button>
+
+            <button
+              onClick={() => handleSignIn('Night')}
+              disabled={hasSignedInToday('Night') || checkingLocation}
+              className={`group relative overflow-hidden p-6 rounded-2xl border-2 transition-all transform hover:scale-105 ${
+                hasSignedInToday('Night')
+                  ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300 cursor-not-allowed'
+                  : 'bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-300 hover:border-indigo-400 hover:shadow-xl'
+              }`}
+            >
+              <div className="relative z-10">
+                <div className="text-6xl mb-3 transform group-hover:scale-110 transition-transform">🌙</div>
+                <div className="text-xl font-bold text-gray-800">Night Session</div>
+                <p className="text-sm text-gray-600 mt-1">End your day safely</p>
+                {hasSignedInToday('Night') && (
+                  <div className="mt-4 flex items-center justify-center gap-2 text-green-600 font-semibold">
+                    <CheckCircle className="w-5 h-5" />
+                    Completed Today
+                  </div>
+                )}
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-100 to-purple-100 opacity-0 group-hover:opacity-50 transition-opacity"></div>
+            </button>
+          </div>
+
+          {checkingLocation && (
+            <div className="text-center py-4">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-500 border-t-transparent"></div>
+              <p className="text-gray-600 mt-2 font-medium">Verifying your location...</p>
+            </div>
+          )}
+
+          {locationStatus && (
+            <div className={`p-5 rounded-2xl flex items-start gap-4 shadow-lg ${
+              locationStatus.success 
+                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300' 
+                : 'bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-300'
+            }`}>
+              {locationStatus.success ? (
+                <div className="bg-green-500 p-2 rounded-full">
+                  <CheckCircle className="w-6 h-6 text-white" />
+                </div>
+              ) : (
+                <div className="bg-red-500 p-2 rounded-full">
+                  <XCircle className="w-6 h-6 text-white" />
+                </div>
+              )}
+              <div className="flex-1">
+                <p className={`font-semibold ${locationStatus.success ? 'text-green-900' : 'text-red-900'}`}>
+                  {locationStatus.message}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Attendance History */}
+        <div className="bg-white rounded-3xl shadow-xl p-6 border border-gray-100">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-xl">
+              <Calendar className="w-6 h-6 text-white" />
+            </div>
+            Attendance History
+          </h2>
+
+          <div className="space-y-4">
+            {getUserRecords().length === 0 ? (
+              <div className="text-center py-16">
+                <div className="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="w-10 h-10 text-gray-400" />
+                </div>
+                <p className="text-gray-500 font-medium">No attendance records yet</p>
+                <p className="text-gray-400 text-sm mt-2">Start checking in to build your history</p>
+              </div>
+            ) : (
+              getUserRecords().map((record, idx) => (
+                <div key={idx} className="group bg-gradient-to-r from-gray-50 to-white border-2 border-gray-200 hover:border-indigo-300 rounded-2xl p-5 hover:shadow-lg transition-all">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        record.session === 'Morning' 
+                          ? 'bg-gradient-to-br from-yellow-400 to-orange-500' 
+                          : 'bg-gradient-to-br from-indigo-500 to-purple-600'
+                      } shadow-lg`}>
+                        <span className="text-2xl">{record.session === 'Morning' ? '🌅' : '🌙'}</span>
+                      </div>
+                      <div>
+                        <div className="font-bold text-gray-800 text-lg">{record.date}</div>
+                        <div className="text-sm text-gray-600 font-medium">{record.session} Session • {record.time}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-2 rounded-xl border border-blue-200">
+                      <MapPin className="w-5 h-5 text-indigo-600" />
+                      <span className="font-semibold text-indigo-700">{record.distance}m</span>
+                      <span className="text-xs text-indigo-600">from home</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+        
+        
+        // Render the component:
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<FamilyAttendance />);
+    </script>
+</body>
+</html>
