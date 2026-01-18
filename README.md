@@ -47,7 +47,7 @@ A modern, location-based attendance tracking system for families. Track morning 
 1. **Download the file**
    ```bash
    # Clone or download the repository
-   git clone https://github.com/Azi77ry/familyAttendence.git
+   git clone https://github.com/yourusername/family-attendance.git
    ```
 
 2. **Open the application**
