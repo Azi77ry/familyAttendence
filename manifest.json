@@ -16,6 +16,11 @@
       "src": "512.png",
       "sizes": "512x512",
       "type": "image/png"
+    },
+     {
+      "src": "100.png",
+      "sizes": "100x100",
+      "type": "image/png"
     }
   ]
 }
