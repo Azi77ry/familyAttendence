@@ -40,8 +40,8 @@ app.use(express.static(path.join(__dirname)));
 // Validation Schemas
 const registerSchema = Joi.object({
     username: Joi.string().alphanum().min(3).max(30).required(),
-    password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}
-)).required(),
+    password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).required(),
+
     name: Joi.string().required(),
     profilePic: Joi.string().allow(null, '')
 });
