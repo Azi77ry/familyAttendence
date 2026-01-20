@@ -2,15 +2,13 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
-const Joi = require('joi');
 const { MongoClient, ObjectId } = require('mongodb');
-const bcrypt = require('bcrypt');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const uri = process.env.MONGODB_URI;
 
-if (!uri) {
+if (!uri) {s
     console.error("FATAL ERROR: MONGODB_URI is not defined. Please create a .env file with your MongoDB connection string.");
     process.exit(1);
 }
@@ -37,44 +35,26 @@ app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(path.join(__dirname)));
 
-// Validation Schemas
-const registerSchema = Joi.object({
-    username: Joi.string().alphanum().min(3).max(30).required(),
-    password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).required(),
-
-    name: Joi.string().required(),
-    profilePic: Joi.string().allow(null, '')
-});
-
-const loginSchema = Joi.object({
-    username: Joi.string().required(),
-    password: Joi.string().required()
-});
-
-
 // --- API Endpoints ---
 
 // POST /api/register
-app.post('/api/register', async (req, res, next) => {
+app.post('/api/register', async (req, res) => {
     try {
-        const { error } = registerSchema.validate(req.body);
-        if (error) {
-            return res.status(400).json({ message: error.details[0].message });
-        }
-
         const { username, password, name, profilePic } = req.body;
+
+        if (!username || !password || !name) {
+            return res.status(400).json({ message: 'Please fill all fields' });
+        }
         
+        // In a real app, hash passwords! We're skipping for simplicity.
         const existingUser = await usersCollection.findOne({ username });
         if (existingUser) {
             return res.status(400).json({ message: 'Username already exists' });
         }
 
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
         const newUser = {
             username,
-            password: hashedPassword,
+            password,
             name,
             profilePic: profilePic || null,
             registeredAt: new Date().toISOString()
@@ -84,37 +64,31 @@ app.post('/api/register', async (req, res, next) => {
         res.status(201).json({ message: 'Registration successful!', userId: result.insertedId });
 
     } catch (error) {
-        next(error);
+        res.status(500).json({ message: 'Server error during registration.', error: error.message });
     }
 });
 
 // POST /api/login
-app.post('/api/login', async (req, res, next) => {
+app.post('/api/login', async (req, res) => {
     try {
-        const { error } = loginSchema.validate(req.body);
-        if (error) {
-            return res.status(400).json({ message: error.details[0].message });
-        }
-
         const { username, password } = req.body;
-        const user = await usersCollection.findOne({ username });
+        const user = await usersCollection.findOne({ username, password });
 
-        if (user && (await bcrypt.compare(password, user.password))) {
+        if (user) {
             // Rename _id to id for frontend compatibility
             user.id = user._id;
             delete user._id;
-            delete user.password;
             res.json(user);
         } else {
             res.status(401).json({ message: 'Invalid username or password' });
         }
     } catch (error) {
-        next(error);
+        res.status(500).json({ message: 'Server error during login.', error: error.message });
     }
 });
 
 // GET /api/users
-app.get('/api/users', async (req, res, next) => {
+app.get('/api/users', async (req, res) => {
     try {
         const users = await usersCollection.find({}, { projection: { password: 0 } }).toArray();
         // Rename _id to id for frontend
@@ -125,12 +99,12 @@ app.get('/api/users', async (req, res, next) => {
         });
         res.json(safeUsers);
     } catch (error) {
-        next(error);
+        res.status(500).json({ message: 'Failed to fetch users.', error: error.message });
     }
 });
 
 // PUT /api/users/:id
-app.put('/api/users/:id', async (req, res, next) => {
+app.put('/api/users/:id', async (req, res) => {
     try {
         const userId = req.params.id;
         const { name, profilePic } = req.body;
@@ -149,12 +123,12 @@ app.put('/api/users/:id', async (req, res, next) => {
             res.status(404).json({ message: 'User not found' });
         }
     } catch (error) {
-        next(error);
+        res.status(500).json({ message: 'Failed to update profile.', error: error.message });
     }
 });
 
 // GET /api/attendance
-app.get('/api/attendance', async (req, res, next) => {
+app.get('/api/attendance', async (req, res) => {
     try {
         const allAttendance = await attendanceCollection.find({}).toArray();
         // Restructure for the frontend { userId: [records] }
@@ -167,12 +141,12 @@ app.get('/api/attendance', async (req, res, next) => {
         });
         res.json(recordsByUId);
     } catch (error) {
-        next(error);
+        res.status(500).json({ message: 'Failed to fetch attendance.', error: error.message });
     }
 });
 
 // POST /api/attendance
-app.post('/api/attendance', async (req, res, next) => {
+app.post('/api/attendance', async (req, res) => {
     try {
         const { userId, record } = req.body;
 
@@ -192,7 +166,7 @@ app.post('/api/attendance', async (req, res, next) => {
 
         res.status(201).json({ message: 'Attendance recorded', records: formattedRecords });
     } catch (error) {
-        next(error);
+        res.status(500).json({ message: 'Failed to record attendance.', error: error.message });
     }
 });
 
@@ -209,8 +183,3 @@ connectDB().then(() => {
     });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).send('Something broke!');
-});
